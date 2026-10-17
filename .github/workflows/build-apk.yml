@@ -1,0 +1,44 @@
+
+name: Build Chronos APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Chronos-Native-Android-Project.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Chronos project
+        run: |
+          mkdir -p project
+          unzip -o Chronos-Native-Android-Project.zip -d project
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        run: gradle -p project :app:assembleDebug
+
+      - name: Save APK for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chronos-debug-APK
+          path: project/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
